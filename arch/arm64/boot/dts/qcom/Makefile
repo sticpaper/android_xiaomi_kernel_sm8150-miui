@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0
+ifneq ($(CONFIG_MACH_XIAOMI_SM8150),y)
 ifeq ($(TARGET_BOARD_TYPE),auto)
 ifeq ($(CONFIG_BUILD_ARM64_DT_OVERLAY),y)
 	dtbo-$(CONFIG_ARCH_SM8150) += \
@@ -604,6 +605,7 @@ $(obj)/%.dtbo:$(src)/../../../../arm64/boot/dts/qcom/%.dts FORCE
 dtbs: $(addprefix $(obj)/,$(dtb-y)) $(addprefix $(obj)/,$(dtbo-y))
 else
 dtbs: $(addprefix $(obj)/../,$(dtb-y))
+endif
 endif
 endif
 clean-files	:= *.dtb *.dtbo
