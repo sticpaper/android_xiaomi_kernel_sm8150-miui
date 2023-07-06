@@ -1,0 +1,7 @@
+config FINGERPRINT_GOODIX_TA
+	tristate "Finger print card goodix"
+	depends on INPUT_FINGERPRINT
+	help
+	  Say Y here to enable support for retrieving self-test reports.
+	  To compile this driver as a module, choose M here.
+	  If unsure, say N.
