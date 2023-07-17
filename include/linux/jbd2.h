@@ -470,6 +470,22 @@ struct jbd2_inode {
 	 * ends. [j_list_lock]
 	 */
 	loff_t i_dirty_end;
+
+	/**
+	 * @i_next_dirty_start:
+	 *
+	 * Offset in bytes where the dirty range for this inode starts in next transaction.
+	 * [j_list_lock]
+	 */
+	loff_t i_next_dirty_start;
+
+	/**
+	 * @i_next_dirty_end:
+	 *
+	 * Inclusive offset in bytes where the dirty range for this inode in next transaction
+	 * ends. [j_list_lock]
+	 */
+	loff_t i_next_dirty_end;
 };
 
 struct jbd2_revoke_table_s;
@@ -1413,8 +1429,6 @@ extern int	   jbd2_journal_clear_err  (journal_t *);
 extern int	   jbd2_journal_bmap(journal_t *, unsigned long, unsigned long long *);
 extern int	   jbd2_journal_force_commit(journal_t *);
 extern int	   jbd2_journal_force_commit_nested(journal_t *);
-extern int	   jbd2_journal_inode_add_write(handle_t *handle, struct jbd2_inode *inode);
-extern int	   jbd2_journal_inode_add_wait(handle_t *handle, struct jbd2_inode *inode);
 extern int	   jbd2_journal_inode_ranged_write(handle_t *handle,
 			struct jbd2_inode *inode, loff_t start_byte,
 			loff_t length);
@@ -1495,6 +1509,7 @@ int __jbd2_log_start_commit(journal_t *journal, tid_t tid);
 int jbd2_journal_start_commit(journal_t *journal, tid_t *tid);
 int jbd2_log_wait_commit(journal_t *journal, tid_t tid);
 int jbd2_complete_transaction(journal_t *journal, tid_t tid);
+int jbd2_transaction_need_wait(journal_t *journal, tid_t tid);
 int jbd2_log_do_checkpoint(journal_t *journal);
 int jbd2_trans_will_send_data_barrier(journal_t *journal, tid_t tid);
 

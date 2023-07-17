@@ -95,8 +95,6 @@ EXPORT_SYMBOL(jbd2_journal_blocks_per_page);
 EXPORT_SYMBOL(jbd2_journal_invalidatepage);
 EXPORT_SYMBOL(jbd2_journal_try_to_free_buffers);
 EXPORT_SYMBOL(jbd2_journal_force_commit);
-EXPORT_SYMBOL(jbd2_journal_inode_add_write);
-EXPORT_SYMBOL(jbd2_journal_inode_add_wait);
 EXPORT_SYMBOL(jbd2_journal_inode_ranged_write);
 EXPORT_SYMBOL(jbd2_journal_inode_ranged_wait);
 EXPORT_SYMBOL(jbd2_journal_init_jbd_inode);
@@ -740,6 +738,23 @@ int jbd2_log_wait_commit(journal_t *journal, tid_t tid)
 	return err;
 }
 
+int jbd2_transaction_need_wait(journal_t *journal, tid_t tid)
+{
+    int need_to_wait = 1;
+    read_lock(&journal->j_state_lock);
+    if (journal->j_running_transaction &&
+        journal->j_running_transaction->t_tid == tid) {
+        if (journal->j_commit_request != tid) {
+            /* transaction not yet started, so request it */
+            need_to_wait = 1;
+        }
+    } else if (!(journal->j_committing_transaction &&
+             journal->j_committing_transaction->t_tid == tid))
+        need_to_wait = 0;
+    read_unlock(&journal->j_state_lock);
+    return need_to_wait;
+}
+
 /*
  * When this function returns the transaction corresponding to tid
  * will be completed.  If the transaction has currently running, start
@@ -749,24 +764,11 @@ int jbd2_log_wait_commit(journal_t *journal, tid_t tid)
  */
 int jbd2_complete_transaction(journal_t *journal, tid_t tid)
 {
-	int	need_to_wait = 1;
-
-	read_lock(&journal->j_state_lock);
-	if (journal->j_running_transaction &&
-	    journal->j_running_transaction->t_tid == tid) {
-		if (journal->j_commit_request != tid) {
-			/* transaction not yet started, so request it */
-			read_unlock(&journal->j_state_lock);
-			jbd2_log_start_commit(journal, tid);
-			goto wait_commit;
-		}
-	} else if (!(journal->j_committing_transaction &&
-		     journal->j_committing_transaction->t_tid == tid))
-		need_to_wait = 0;
-	read_unlock(&journal->j_state_lock);
-	if (!need_to_wait)
+	if (!jbd2_transaction_need_wait(journal, tid))
 		return 0;
-wait_commit:
+	else
+		jbd2_log_start_commit(journal, tid);
+
 	return jbd2_log_wait_commit(journal, tid);
 }
 EXPORT_SYMBOL(jbd2_complete_transaction);
@@ -2581,6 +2583,8 @@ void jbd2_journal_init_jbd_inode(struct jbd2_inode *jinode, struct inode *inode)
 	jinode->i_flags = 0;
 	jinode->i_dirty_start = 0;
 	jinode->i_dirty_end = 0;
+	jinode->i_next_dirty_start = 0;
+	jinode->i_next_dirty_end = 0;
 	INIT_LIST_HEAD(&jinode->i_list);
 }
 
