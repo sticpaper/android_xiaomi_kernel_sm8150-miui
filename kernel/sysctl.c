@@ -99,6 +99,9 @@
 
 /* External variables not in a header file. */
 extern int suid_dumpable;
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+extern int jbd2_bar;
+#endif
 #ifdef CONFIG_COREDUMP
 extern int core_uses_pid;
 extern char core_pattern[];
@@ -1950,6 +1953,15 @@ static struct ctl_table fs_table[] = {
 	{
 		.procname	= "leases-enable",
 		.data		= &leases_enable,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec,
+	},
+#endif
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+	{
+		.procname	= "jbd2b",
+		.data		= &jbd2_bar,
 		.maxlen		= sizeof(int),
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,

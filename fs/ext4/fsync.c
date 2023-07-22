@@ -38,6 +38,10 @@
 
 #define AID_SYSTEM 1000 /* system server */
 
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+extern int jbd2_bar;
+#endif
+
 /*
  * If we're not journaling and this is a just-created file, we have to
  * sync our parent directory (if it was freshly created) since
@@ -153,6 +157,11 @@ int ext4_sync_file(struct file *file, loff_t start, loff_t end, int datasync)
 	if (journal->j_flags & JBD2_BARRIER &&
 	    !jbd2_trans_will_send_data_barrier(journal, commit_tid))
 		needs_barrier = true;
+
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+	if (!jbd2_bar)
+		needs_barrier = false;
+#endif
 
 	if (test_opt(inode->i_sb, ASYNC_FSYNC)) {
 		if (!uid_eq(GLOBAL_ROOT_UID, current_fsuid()) &&
