@@ -60,6 +60,9 @@ static struct ext4_lazy_init *ext4_li_info;
 static struct mutex ext4_li_mtx;
 static struct ratelimit_state ext4_mount_msg_ratelimit;
 
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+extern int jbd2_bar;
+#endif
 static int ext4_load_journal(struct super_block *, struct ext4_super_block *,
 			     unsigned long journal_devnum);
 static int ext4_show_options(struct seq_file *seq, struct dentry *root);
@@ -5061,7 +5064,13 @@ static int ext4_commit_super(struct super_block *sb, int sync)
 	if (sync) {
 		unlock_buffer(sbh);
 		error = __sync_dirty_buffer(sbh,
+/* linux 4.4 (test_opt(sb, BARRIER) && jbd2_bar) ? WRITE_FUA : WRITE_SYNC); */
+/* linux 4.9 (test_opt(sb, BARRIER) && jbd2_bar) ? WRITE_FUA : WRITE_SYNC); */
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+			REQ_SYNC | ((test_opt(sb, BARRIER) && jbd2_bar) ? REQ_FUA : 0));
+#else
 			REQ_SYNC | (test_opt(sb, BARRIER) ? REQ_FUA : 0));
+#endif
 		if (error)
 			return error;
 
@@ -5192,6 +5201,12 @@ static int ext4_sync_fs(struct super_block *sb, int wait)
 		}
 	} else if (wait && test_opt(sb, BARRIER))
 		needs_barrier = true;
+
+#ifdef CONFIG_EXT4_FS_DYN_BARRIER
+	if (!jbd2_bar)
+		needs_barrier = false;
+#endif
+
 	if (needs_barrier) {
 		int err;
 		err = blkdev_issue_flush(sb->s_bdev, GFP_KERNEL, NULL);

@@ -99,6 +99,20 @@ config EXT4_FS_SECURITY
 	  If you are not using a security module that requires using
 	  extended attributes for file security labels, say N.
 
+config EXT4_FS_DYN_BARRIER
+	bool "Ext4 Dynamic Barrier"
+	depends on EXT4_FS
+	default n
+	help
+	  Support switch on/off of ext4 barrier.
+
+config EXT4_FS_DEFOFF_BARRIER
+	bool "Ext4 Disabled By Default Barrier"
+	depends on EXT4_FS_DYN_BARRIER
+	default n
+	help
+	  Disable ext4 barrier by default after enabling.
+
 config EXT4_ENCRYPTION
 	bool "Ext4 Encryption"
 	depends on EXT4_FS
