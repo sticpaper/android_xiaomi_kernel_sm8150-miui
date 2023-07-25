@@ -1584,6 +1584,9 @@ static int ext4_journalled_write_end(struct file *file,
 			ext4_orphan_del(NULL, inode);
 	}
 
+#ifdef CONFIG_EXT4_FS_ASYNC_DISCARD
+	ext4_update_time(EXT4_SB(inode->i_sb));
+#endif
 	return ret ? ret : copied;
 }
 
