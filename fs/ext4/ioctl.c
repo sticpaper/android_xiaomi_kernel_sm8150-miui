@@ -996,11 +996,6 @@ resizefs_out:
 		struct fstrim_range range;
 		int ret = 0;
 
-#ifdef CONFIG_EXT4_FS_ASYNC_DISCARD
-		if (test_opt(sb, ASYNC_DISCARD))
-			return 0;
-#endif
-
 		if (!capable(CAP_SYS_ADMIN))
 			return -EPERM;
 
