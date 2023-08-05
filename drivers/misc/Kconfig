@@ -595,6 +595,20 @@ config TEST_IRQ_REQUESTER
 
 	  If in doubt, say N.
 
+config PERF_HELPER
+	tristate "Xiaomi perf_helper kernel module"
+	depends on MACH_XIAOMI_SM8150
+	default n
+	help
+	  this module support record perf lock history and other perf messages.
+
+config BOOTUP_RECLAIM
+	bool "bootup reclaim"
+	depends on PERF_HELPER && MEMCG
+	default n
+	help
+	  reclaim global memory when bootup
+
 config AKM09970
 	tristate "INPUT_AK09970 digital hall sensor support"
 	depends on I2C
