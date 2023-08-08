@@ -905,6 +905,13 @@ config MSM_PERFORMANCE
 	when requested by the userspace by changing the cpufreq policy
 	fmin and fmax.
 
+config MSM_PERFORMANCE_NODE
+	bool "Expose node to enable/disable msm performance"
+	depends on MSM_PERFORMANCE
+	default n
+	help
+	  Expose node to enable/disable msm performance.
+
 config MSM_DRM_NOTIFY
 	bool
 	depends on !DRM_MSM

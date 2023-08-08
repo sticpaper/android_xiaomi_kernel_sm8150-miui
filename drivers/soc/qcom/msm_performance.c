@@ -34,6 +34,12 @@
  */
 #define POLL_INT 15
 
+#ifdef CONFIG_MSM_PERFORMANCE_NODE
+/* to enable perfd mboost */
+static int mboost = 1;
+module_param_named(mboost, mboost, int, 0644);
+#endif
+
 /* To handle cpufreq min/max request */
 struct cpu_status {
 	unsigned int min;
@@ -61,6 +67,11 @@ static int set_cpu_min_freq(const char *buf, const struct kernel_param *kp)
 	struct cpu_status *i_cpu_stats;
 	struct cpufreq_policy policy;
 	cpumask_var_t limit_mask;
+
+#ifdef CONFIG_MSM_PERFORMANCE_NODE
+	if (!mboost)
+		return 0;
+#endif
 
 	while ((cp = strpbrk(cp + 1, " :")))
 		ntokens++;
@@ -137,6 +148,11 @@ static int set_cpu_max_freq(const char *buf, const struct kernel_param *kp)
 	struct cpu_status *i_cpu_stats;
 	struct cpufreq_policy policy;
 	cpumask_var_t limit_mask;
+
+#ifdef CONFIG_MSM_PERFORMANCE_NODE
+	if (!mboost)
+		return 0;
+#endif
 
 	while ((cp = strpbrk(cp + 1, " :")))
 		ntokens++;
